@@ -20,6 +20,8 @@ import csv
 import ffmpeg
 import argparse
 
+LICENSE = "Copyright (C) 2018  Fabiano Tarlao.\nThis program comes with ABSOLUTELY NO WARRANTY.\n" \
+          "This is free software, and you are welcome to redistribute it under GPL3 license conditions"
 
 UPDATE_SEC_INTERVAL = 5  # sec
 UPDATE_MB_INTERVAL = 500  # minimum MBytes of data between output log/messages
@@ -43,7 +45,6 @@ MEDIA_EXTENSIONS = []
 
 CONFIG = None
 
-
 def arg_parser():
     parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
                                      epilog='Single file check ignores options -i,-m,-p,-e')
@@ -60,7 +61,8 @@ def arg_parser():
                         dest='is_disable_media')
     parser.add_argument('-p', '--disable-pdf', action='store_true', help='Ignore pdf files',
                         dest='is_disable_pdf')
-    parser.add_argument('-e', '--disable-extra', action='store_true', help='Ignore extra image extensions',
+    parser.add_argument('-e', '--disable-extra', action='store_true', help='Ignore extra image extensions '
+                                                                           '(psd, xcf,. and rare ones)',
                         dest='is_disable_extra')
 
     parse_out = parser.parse_args()
@@ -79,7 +81,9 @@ def setup(configuration):
         PIL_EXTENSIONS.extend(PIL_EXTRA_EXTENSIONS)
 
     if enable_images:
-        MEDIA_EXTENSIONS += PIL_EXTENSIONS + MAGICK_EXTENSIONS
+        MEDIA_EXTENSIONS += PIL_EXTENSIONS
+        if enable_extra:
+            MEDIA_EXTENSIONS += MAGICK_EXTENSIONS
 
     if enable_pdf:
         MEDIA_EXTENSIONS += PDF_EXTENSIONS
