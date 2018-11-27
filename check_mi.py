@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = "Fabiano Tarlao"
+__copyright__ = "Copyright 2018, Fabiano Tarlao"
+__credits__ = ["Fabiano Tarlao"]
+__license__ = "GPL3"
+__version__ = "0.9.3"
+__maintainer__ = "Fabiano Tarlao"
+__status__ = "Beta"
+
 import sys
 import os
 import time
@@ -9,7 +20,6 @@ import csv
 import ffmpeg
 import argparse
 
-VERSION = "0.9.2"
 
 UPDATE_SEC_INTERVAL = 5  # sec
 UPDATE_MB_INTERVAL = 500  # minimum MBytes of data between output log/messages
@@ -41,7 +51,7 @@ def arg_parser():
                         help='path to the file or folder')
     parser.add_argument('-c', '--csv', metavar='X', type=str,
                         help='Save bad files details on csv file %(metavar)s', dest='csv_filename')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-r', '--recurse', action='store_true', help='Recurse subdirs',
                         dest='is_recurse')
     parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
