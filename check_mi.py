@@ -1,0 +1,293 @@
+import sys
+import os
+import time
+import PIL
+from PIL import Image as ImageP
+from wand.image import Image as ImageW
+import PyPDF2
+import csv
+import ffmpeg
+import argparse
+
+VERSION = "0.9.2"
+
+UPDATE_SEC_INTERVAL = 5  # sec
+UPDATE_MB_INTERVAL = 500  # minimum MBytes of data between output log/messages
+
+# The following extensions includes only the most common ones, you can add other extensions BUT..
+# ..BUT, you have to double check Pillow, Imagemagick or FFmpeg to support that format/container
+# please in the case I miss important extensions, send a pull request or create an Issue
+
+PIL_EXTENSIONS = ['jpg', 'jpeg', 'jpe', 'png', 'bmp', 'gif', 'pcd', 'tif', 'tiff', 'j2k', 'j2p', 'j2x', 'webp']
+PIL_EXTRA_EXTENSIONS = ['eps', 'ico', 'im', 'pcx', 'ppm', 'sgi', 'spider', 'xbm', 'tga']
+
+MAGICK_EXTENSIONS = ['psd', 'xcf']
+
+PDF_EXTENSIONS = ['pdf']
+
+# this ones are managed by libav or ffmpeg
+VIDEO_EXTENSIONS = ['avi', 'mp4', 'mov', 'mpeg', 'mpg', 'm2p', 'mkv', '3gp', 'ogg', 'flv', 'f4v', 'f4p', 'f4a', 'f4b']
+AUDIO_EXTENSIONS = ['mp3', 'mp2']
+
+MEDIA_EXTENSIONS = []
+
+CONFIG = None
+
+
+def arg_parser():
+    parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
+                                     epilog='Single file check ignores options -i,-m,-p,-e')
+    parser.add_argument('checkpath', metavar='P', type=str,
+                        help='path to the file or folder')
+    parser.add_argument('-c', '--csv', metavar='X', type=str,
+                        help='Save bad files details on csv file %(metavar)s', dest='csv_filename')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-r', '--recurse', action='store_true', help='Recurse subdirs',
+                        dest='is_recurse')
+    parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
+                        dest='is_disable_image')
+    parser.add_argument('-m', '--disable-media', action='store_true', help='Ignore media files',
+                        dest='is_disable_media')
+    parser.add_argument('-p', '--disable-pdf', action='store_true', help='Ignore pdf files',
+                        dest='is_disable_pdf')
+    parser.add_argument('-e', '--disable-extra', action='store_true', help='Ignore extra image extensions',
+                        dest='is_disable_extra')
+
+    parse_out = parser.parse_args()
+    parse_out.enable_csv = parse_out.csv_filename is not None
+    return parse_out
+
+
+def setup(configuration):
+    global MEDIA_EXTENSIONS, PIL_EXTENSIONS
+    enable_extra = not configuration.is_disable_extra
+    enable_images = not configuration.is_disable_image
+    enable_media = not configuration.is_disable_media
+    enable_pdf = not configuration.is_disable_pdf
+
+    if enable_extra:
+        PIL_EXTENSIONS.extend(PIL_EXTRA_EXTENSIONS)
+
+    if enable_images:
+        MEDIA_EXTENSIONS += PIL_EXTENSIONS + MAGICK_EXTENSIONS
+
+    if enable_pdf:
+        MEDIA_EXTENSIONS += PDF_EXTENSIONS
+
+    if enable_media:
+        MEDIA_EXTENSIONS += VIDEO_EXTENSIONS + AUDIO_EXTENSIONS
+
+
+def pil_check(filename):
+    img = ImageP.open(filename)  # open the image file
+    img.verify()  # verify that it is a good image, without decoding it.. quite fast
+    img.close()
+
+    # Image manipulation is mandatory to detect few defects
+    img = ImageP.open(filename)  # open the image file
+    # alternative (removed) version, decode/recode:
+    # f = cStringIO.StringIO()
+    # f = io.BytesIO()
+    # img.save(f, "BMP")
+    # f.close()
+    img.transpose(PIL.Image.FLIP_LEFT_RIGHT)  #
+    img.close()
+
+
+def magick_check(filename, flip=True):
+    # very useful for xcf, psd and aslo supports pdf
+    img = ImageW(filename=filename)
+    if flip:
+        temp = img.flip
+    else:
+        temp = img.make_blob(format='bmp')
+    img.close()
+    return temp
+
+
+def pypdf_check(filename):
+    # PDF format
+    # Check with specific library
+    pdfobj = PyPDF2.PdfFileReader(open(filename, "rb"))
+    pdfobj.getDocumentInfo()
+    # Check with imagemagick
+    magick_check(filename, False)
+
+
+def size_check(filename):
+    statfile = os.stat(filename)
+    filesize = statfile.st_size
+    if filesize == 0:
+        raise SyntaxError("Zero size file")
+    return filesize
+
+
+def is_target_file(filename):
+    file_lowercase = filename.lower()
+    file_ext = os.path.splitext(file_lowercase)[1][1:]
+    return file_ext in MEDIA_EXTENSIONS
+
+
+def ffmpeg_check(filename):
+    stream = ffmpeg.input(filename).output('pipe:', format="null")
+    stream.run(capture_stdout=True, capture_stderr=True)
+
+
+def save_csv(filename, data):
+    with open(filename, mode='w') as out_file:
+        out_writer = csv.writer(out_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for entry in data:
+            out_writer.writerow(list(entry))
+
+
+class TimedLogger:
+    def __init__(self):
+        self.previous_time = 0
+        self.previous_size = 0
+        self.start_time = 0
+
+    def start(self):
+        self.start_time = self.previous_time = time.time()
+        return self
+
+    def print_log(self, num_files, num_bad_files, total_file_size, wait_min_processed=UPDATE_MB_INTERVAL, force=False):
+        if not force and (total_file_size - self.previous_size) < wait_min_processed * (1024 * 1024):
+            return
+        cur_time = time.time()
+        from_previous_delta = cur_time - self.previous_time
+        if from_previous_delta > UPDATE_SEC_INTERVAL or force:
+            self.previous_time = cur_time
+            self.previous_size = total_file_size
+
+            from_start_delta = cur_time - self.start_time
+            speed_MB = total_file_size / (1024 * 1024 * from_start_delta)
+            speed_IS = num_files / from_start_delta
+            processed_size_MB = float(total_file_size) / (1024 * 1024)
+
+            print "Number of bad/processed files:", num_bad_files, "/", num_files, ", size of processed files:", \
+                "{0:0.1f}".format(processed_size_MB), "MB"
+            print "Processing speed:", "{0:0.1f}".format(speed_MB), "MB/s, or", "{0:0.1f}".format(
+                speed_IS), "files/s"
+
+
+def is_pil_simd():
+    return 'post' in PIL.PILLOW_VERSION
+
+
+def is_ffmpeg():
+    print "this is a stub"
+
+
+def check_file(filename):
+    if sys.version_info[0] < 3:
+        filename = filename.decode('utf8')
+
+    file_lowercase = filename.lower()
+    file_ext = os.path.splitext(file_lowercase)[1][1:]
+
+    file_size = 'NA'
+
+    try:
+        file_size = size_check(filename)
+
+        if not CONFIG.is_disable_image:
+            if file_ext in PIL_EXTENSIONS:
+                pil_check(filename)
+
+            if file_ext in PDF_EXTENSIONS:
+                pypdf_check(filename)
+
+            if file_ext in MAGICK_EXTENSIONS:
+                magick_check(filename)
+
+        if (not CONFIG.is_disable_media) and file_ext in VIDEO_EXTENSIONS:
+            ffmpeg_check(filename)
+
+    except Exception as e:
+        # IMHO "Exception" is NOT too broad, io/decode/any problem should be (with details) an image problem
+        return False, (filename, str(e), file_size)
+
+    return True, (filename, None, file_size)
+
+
+def log_check_outcome(check_outcome_detail):
+    print "Bad file:", check_outcome_detail[0], ", error detail:", check_outcome_detail[
+        1], ", size[bytes]:", check_outcome_detail[2]
+
+
+def main():
+    global CONFIG
+    if not is_pil_simd():
+        print "********WARNING*******************************************************"
+        print "You are using Python Pillow PIL module and not the Pillow-SIMD module."
+        print "Pillow-SIMD is a 4x faster drop-in replacement of the base PIL module."
+        print "Uninstalling Pillow and installing Pillow-SIMD is a good idea."
+        print "**********************************************************************"
+
+    CONFIG = arg_parser()
+    setup(CONFIG)
+    check_path = CONFIG.checkpath
+
+    print "Files integrity check for:", check_path
+
+    if os.path.isfile(check_path):
+        # manage single file check
+        is_success = check_file(check_path)
+        if not is_success[0]:
+            check_outcome_detail = is_success[1]
+            log_check_outcome(check_outcome_detail)
+            sys.exit(1)
+        else:
+            print "File", check_path, "is OK"
+            sys.exit(0)
+
+    # manage folder (searches media files into)
+
+    # initializations
+    count = 0
+    count_bad = 0
+    total_file_size = 0
+    bad_files_info = [("file_name", "error_message", "file_size[bytes]")]
+    timed_logger = TimedLogger().start()
+
+    for root, sub_dirs, files in os.walk(check_path):
+
+        media_files = []
+        for filename in files:
+            if is_target_file(filename):
+                media_files.append(filename)
+
+        for filename in media_files:
+            full_filename = os.path.join(root, filename)
+            count += 1
+
+            is_success = check_file(full_filename)
+            file_size = is_success[1][2]
+            if file_size != 'NA':
+                total_file_size += file_size
+
+            if not is_success[0]:
+                check_outcome_detail = is_success[1]
+                count_bad += 1
+                bad_files_info.append(check_outcome_detail)
+                log_check_outcome(check_outcome_detail)
+
+            # visualization logs and stats
+            timed_logger.print_log(count, count_bad, total_file_size)
+
+        if not CONFIG.is_recurse:
+            break  # we only check the root folder
+
+    print "\n**Task completed**\n"
+    timed_logger.print_log(count, count_bad, total_file_size, force=True)
+
+    if count_bad > 0 and CONFIG.enable_csv:
+        print "\nBad files details in CSV format, file path:", CONFIG.csv_filename
+        save_csv(CONFIG.csv_filename, bad_files_info)
+
+    if count_bad == 0:
+        print "The files are OK :-)"
+
+
+if __name__ == "__main__":
+    main()
