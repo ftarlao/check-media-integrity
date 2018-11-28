@@ -81,7 +81,7 @@ def arg_parser():
                         dest='is_recurse')
     parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
                         dest='is_disable_image')
-    parser.add_argument('-m', '--enable-media', action='store_true', help='Ignore audio/video files',
+    parser.add_argument('-m', '--enable-media', action='store_true', help='Enable check for audio/video files',
                         dest='is_enable_media')
     parser.add_argument('-p', '--disable-pdf', action='store_true', help='Ignore pdf files',
                         dest='is_disable_pdf')
