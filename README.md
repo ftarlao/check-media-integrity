@@ -50,18 +50,23 @@ providing: file name, error message, file size
 ##Examples
 
 Check a single file:
+
 ```check_mi.py ./test_folder/files/050807-124755t.jpg```
 
 Check a folder:
+
 ```check_mi.py ./test_folder/files```
 
-Check a folder, and subfolder recursiverly
+Check a folder, and subfolder recursiverly:
+
 ```check_mi.py -r ./test_folder/files```
 
-Check a folder, and subfolder recursiverly and also check media (audio and video)
+Check a folder, and subfolder recursiverly and also check media (audio and video):
+
 ```check_mi.py -m -r ./test_folder/files```
 
 Check a folder, and subfolder recursiverly and save bad files details to out.csv file:
+
 ```check_mi.py -r ./test_folder/files -c ./test_folder/output/out.csv```
 
 ##Test damage
