@@ -88,5 +88,5 @@ In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS
 
 ## Test damage
 test_damage.py is a funny experiment, it evaluates the probability of a random damage to be detected by this tool.
-That is.. it is very low, the damage has to be in vital parts (very small portion of the file) or to be a file truncation.
+That is the outcome is a bit below expectations, the damage has to be in vital parts, better to be a random noise or to be a file truncation.
 I think that the code is self explanatory.
