@@ -1,7 +1,7 @@
 # check-media-integrity
 ## Overview
 This tool automatically checks the integrity of media files (pictures, video, audio).
-The tool tests if common library (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files, but **image, audio and video format are very resilient to defects and damages**.
+The tool tests if common libraries (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files, but **image, audio and video format are very resilient to defects and damages**.
 
 This tool is able with 100% confidence to spot files that have broken header/metadata and truncated image files.
 
