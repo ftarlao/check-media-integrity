@@ -21,7 +21,7 @@ optional arguments:
   -v, --version         show program's version number and exit
   -r, --recurse         Recurse subdirs
   -i, --disable-images  Ignore image files
-  -m, --enable-media    Ignore audio/video files
+  -m, --enable-media    Enable check for audio/video files
   -p, --disable-pdf     Ignore pdf files
   -e, --disable-extra   Ignore extra image extensions (psd, xcf,. and rare
                         ones)
