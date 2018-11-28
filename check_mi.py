@@ -20,6 +20,7 @@ import csv
 import ffmpeg
 import argparse
 
+
 LICENSE = "Copyright (C) 2018  Fabiano Tarlao.\nThis program comes with ABSOLUTELY NO WARRANTY.\n" \
           "This is free software, and you are welcome to redistribute it under GPL3 license conditions"
 
@@ -252,9 +253,9 @@ def check_file(filename, error_detect='default'):
         if file_ext in VIDEO_EXTENSIONS:
             ffmpeg_check(filename, error_detect=error_detect)
 
-    except ffmpeg.Error as e:
-        # print e.stderr
-        return False, (filename, str(e), file_size)
+    # except ffmpeg.Error as e:
+    #     # print e.stderr
+    #     return False, (filename, str(e), file_size)
     except Exception as e:
         # IMHO "Exception" is NOT too broad, io/decode/any problem should be (with details) an image problem
         return False, (filename, str(e), file_size)

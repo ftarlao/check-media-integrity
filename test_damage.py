@@ -21,20 +21,20 @@ import check_mi
 import sys
 
 
-def damage_file(filename, offset, size):
-    num_noise = random.randrange(256)
+def damage_file(filename, offset, size, full_noise=False):
+    num_noise = 0#random.randrange(256)
     bytes = bytearray(size)
     for i in range(len(bytes)):
-        bytes[i] = num_noise
+        bytes[i] = random.randrange(256) if full_noise else num_noise
     fh = open(filename, "r+b")
     fh.seek(offset)
     fh.write(bytes)
     fh.close()
 
 
-def damage_clone(filename, dest_filename, offset, size):
+def damage_clone(filename, dest_filename, offset, size, full_noise=False):
     shutil.copy(filename, dest_filename)
-    damage_file(dest_filename, offset, size)
+    damage_file(dest_filename, offset, size, full_noise=full_noise)
 
 
 def truncate_clone(filename, dest_filename, file_size):
@@ -43,11 +43,11 @@ def truncate_clone(filename, dest_filename, file_size):
     fh.truncate(file_size)
 
 
-def random_damage_clone(filename, dest_filename, size):
+def random_damage_clone(filename, dest_filename, size, full_noise=False):
     statinfo = os.stat(filename)
     file_size = statinfo.st_size
     offset = random.randrange(file_size)
-    damage_clone(filename, dest_filename, offset, min(size, file_size - offset))
+    damage_clone(filename, dest_filename, offset, min(size, file_size - offset),full_noise=full_noise)
 
 
 def random_truncate_clone(filename, dest_filename, max_perc):
@@ -57,8 +57,8 @@ def random_truncate_clone(filename, dest_filename, max_perc):
 
 
 NUMBER_PER_CASE = 20
-DAMAGE_SIZES = [512, 4096, 262144, 1048576, 4*1048576]
-PERC_TRUNC = [1, 10]
+DAMAGE_SIZES = [4096, 16556, 256000, 2 * 1048576]
+PERC_TRUNC = []
 
 
 def main():
@@ -83,14 +83,29 @@ def main():
         errors_str = 0
 
         for i in range(NUMBER_PER_CASE):
-            random_damage_clone(test_file, dest_test_file, damage_size)
+            random_damage_clone(test_file, dest_test_file, damage_size,full_noise=True)
             res_def = check_mi.check_file(dest_test_file, error_detect='default')
             if not res_def[0]:
                 errors_def += 1
             res_str = check_mi.check_file(dest_test_file, error_detect='strong')
             if not res_str[0]:
                 errors_str += 1
-        print "DAMAGE SIZE[bytes]", damage_size
+        print "DAMAGE SIZE[bytes] random noise", damage_size
+        print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
+        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+
+        errors_def = 0
+        errors_str = 0
+
+        for i in range(NUMBER_PER_CASE):
+            random_damage_clone(test_file, dest_test_file, damage_size, full_noise=False)
+            res_def = check_mi.check_file(dest_test_file, error_detect='default')
+            if not res_def[0]:
+                errors_def += 1
+            res_str = check_mi.check_file(dest_test_file, error_detect='strong')
+            if not res_str[0]:
+                errors_str += 1
+        print "DAMAGE SIZE[bytes] all zeros", damage_size
         print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
         print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
 
