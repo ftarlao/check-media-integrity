@@ -45,9 +45,31 @@ MEDIA_EXTENSIONS = []
 
 CONFIG = None
 
+import textwrap as _textwrap
+
+
+class MultilineFormatter(argparse.HelpFormatter):
+    def _fill_text(self, text, width, indent):
+        text = self._whitespace_matcher.sub(' ', text).strip()
+        paragraphs = text.split('|n ')
+        multiline_text = ''
+        for paragraph in paragraphs:
+            formatted_paragraph = _textwrap.fill(paragraph, width, initial_indent=indent,
+                                                 subsequent_indent=indent) + '\n\n'
+            multiline_text = multiline_text + formatted_paragraph
+        return multiline_text
+
+
 def arg_parser():
+    epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c|n
+    - With \'err_detect\' option you can provide the strong shortcut or the flags supported by ffmpeg, e.g.:
+    crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
+    - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
+    - Supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
+    - Supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS)
+
     parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
-                                     epilog='Single file check ignores options -i,-m,-p,-e')
+                                     epilog=epilog_details, formatter_class=MultilineFormatter)
     parser.add_argument('checkpath', metavar='P', type=str,
                         help='path to the file or folder')
     parser.add_argument('-c', '--csv', metavar='X', type=str,
@@ -57,13 +79,16 @@ def arg_parser():
                         dest='is_recurse')
     parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
                         dest='is_disable_image')
-    parser.add_argument('-m', '--disable-media', action='store_true', help='Ignore media files',
-                        dest='is_disable_media')
+    parser.add_argument('-m', '--enable-media', action='store_true', help='Ignore audio/video files',
+                        dest='is_enable_media')
     parser.add_argument('-p', '--disable-pdf', action='store_true', help='Ignore pdf files',
                         dest='is_disable_pdf')
     parser.add_argument('-e', '--disable-extra', action='store_true', help='Ignore extra image extensions '
                                                                            '(psd, xcf,. and rare ones)',
                         dest='is_disable_extra')
+    parser.add_argument('-x', '--err-detect', metavar='E', type=str,
+                        help='Execute ffmpeg decoding with a specific err_detect flag %(metavar)s, \'strict\' is shortcut for +crccheck+bitstream+buffer+explode',
+                        dest='error_detect', default='default')
 
     parse_out = parser.parse_args()
     parse_out.enable_csv = parse_out.csv_filename is not None
@@ -74,7 +99,7 @@ def setup(configuration):
     global MEDIA_EXTENSIONS, PIL_EXTENSIONS
     enable_extra = not configuration.is_disable_extra
     enable_images = not configuration.is_disable_image
-    enable_media = not configuration.is_disable_media
+    enable_media = configuration.is_enable_media
     enable_pdf = not configuration.is_disable_pdf
 
     if enable_extra:
@@ -104,7 +129,7 @@ def pil_check(filename):
     # f = io.BytesIO()
     # img.save(f, "BMP")
     # f.close()
-    img.transpose(PIL.Image.FLIP_LEFT_RIGHT)  #
+    img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
     img.close()
 
 
@@ -142,8 +167,17 @@ def is_target_file(filename):
     return file_ext in MEDIA_EXTENSIONS
 
 
-def ffmpeg_check(filename):
-    stream = ffmpeg.input(filename).output('pipe:', format="null")
+def ffmpeg_check(filename, error_detect='default'):
+    if error_detect == 'default':
+        stream = ffmpeg.input(filename)
+    else:
+        if error_detect == 'strong':
+            custom = '+crccheck+bitstream+buffer+explode'
+        else:
+            custom = error_detect
+        stream = ffmpeg.input(filename, **{'err_detect': custom})
+
+    stream = stream.output('pipe:', format="null")
     stream.run(capture_stdout=True, capture_stderr=True)
 
 
@@ -192,7 +226,7 @@ def is_ffmpeg():
     print "this is a stub"
 
 
-def check_file(filename):
+def check_file(filename, error_detect='default'):
     if sys.version_info[0] < 3:
         filename = filename.decode('utf8')
 
@@ -204,19 +238,21 @@ def check_file(filename):
     try:
         file_size = size_check(filename)
 
-        if not CONFIG.is_disable_image:
-            if file_ext in PIL_EXTENSIONS:
-                pil_check(filename)
+        if file_ext in PIL_EXTENSIONS:
+            pil_check(filename)
 
-            if file_ext in PDF_EXTENSIONS:
-                pypdf_check(filename)
+        if file_ext in PDF_EXTENSIONS:
+            pypdf_check(filename)
 
-            if file_ext in MAGICK_EXTENSIONS:
-                magick_check(filename)
+        if file_ext in MAGICK_EXTENSIONS:
+            magick_check(filename)
 
-        if (not CONFIG.is_disable_media) and file_ext in VIDEO_EXTENSIONS:
-            ffmpeg_check(filename)
+        if file_ext in VIDEO_EXTENSIONS:
+            ffmpeg_check(filename, error_detect=error_detect)
 
+    except ffmpeg.Error as e:
+        # print e.stderr
+        return False, (filename, str(e), file_size)
     except Exception as e:
         # IMHO "Exception" is NOT too broad, io/decode/any problem should be (with details) an image problem
         return False, (filename, str(e), file_size)
@@ -246,7 +282,7 @@ def main():
 
     if os.path.isfile(check_path):
         # manage single file check
-        is_success = check_file(check_path)
+        is_success = check_file(check_path, CONFIG.error_detect)
         if not is_success[0]:
             check_outcome_detail = is_success[1]
             log_check_outcome(check_outcome_detail)
@@ -275,7 +311,7 @@ def main():
             full_filename = os.path.join(root, filename)
             count += 1
 
-            is_success = check_file(full_filename)
+            is_success = check_file(full_filename, CONFIG.error_detect)
             file_size = is_success[1][2]
             if file_size != 'NA':
                 total_file_size += file_size
