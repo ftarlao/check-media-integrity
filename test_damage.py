@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 # This script works in Linux, not tested in Windows
+# First argument is the media file to clone and damage, and the second argument is the working folder to put clones to
+# e.g:
+# test_damage.py test_folder/files/deep/050807-124755.jpg /tmp
 
 __author__ = "Fabiano Tarlao"
 __copyright__ = "Copyright 2018, Fabiano Tarlao"
@@ -15,6 +18,7 @@ import shutil
 import os
 import random
 import check_mi
+import sys
 
 
 def damage_file(filename, offset, size):
@@ -52,24 +56,25 @@ def random_truncate_clone(filename, dest_filename, max_perc):
     truncate_clone(filename, dest_filename, file_size)
 
 
-if False:
-    NUMBER_PER_CASE = 40
-    DAMAGE_SIZES = [64, 512, 1024, 4096, 524288]
-    PERC_TRUNC = [1, 10]
-else:
-    NUMBER_PER_CASE = 40
-    DAMAGE_SIZES = [65000]
-    PERC_TRUNC = [1, 10]
+NUMBER_PER_CASE = 20
+DAMAGE_SIZES = [512, 4096, 262144, 1048576, 4*1048576]
+PERC_TRUNC = [1, 10]
 
 
 def main():
-    test_file = 'test_folder/files/deep/Bees3Wmv.mp4'
+    if len(sys.argv) != 3:
+        test_file = 'test_folder/files/deep/050807-124755.jpg'
+        temp_folder = '/tmp'
+    else:
+        test_file = sys.argv[1]
+        temp_folder = sys.argv[2]
+
     orig_statinfo = os.stat(test_file)
-    temp_folder = '/tmp'
     dest_test_file = os.path.join(temp_folder, os.path.basename(test_file))
 
     random.seed = 1
 
+    print "Original image size:", orig_statinfo.st_size
     for damage_size in DAMAGE_SIZES:
         if damage_size >= orig_statinfo.st_size:
             break
@@ -87,7 +92,7 @@ def main():
                 errors_str += 1
         print "DAMAGE SIZE[bytes]", damage_size
         print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
-        print "Detected damages strong:", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
 
     for perc in PERC_TRUNC:
         errors_def = 0
@@ -103,7 +108,8 @@ def main():
                 errors_str += 1
         print "TRUNCATE SIZE %", perc
         print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
-        print "Detected damages strong:", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+
 
 if __name__ == "__main__":
     main()

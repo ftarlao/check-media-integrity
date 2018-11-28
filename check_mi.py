@@ -66,7 +66,9 @@ def arg_parser():
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
     - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
     - Supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
-    - Supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS)
+    - Supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS) + """|n
+    - Output CSV file, has the header raw, and one line for each bad file, providing: file name, error message, 
+    file size"""
 
     parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
                                      epilog=epilog_details, formatter_class=MultilineFormatter)
