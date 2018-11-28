@@ -62,7 +62,7 @@ class MultilineFormatter(argparse.HelpFormatter):
 
 def arg_parser():
     epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c|n
-    - With \'err_detect\' option you can provide the strong shortcut or the flags supported by ffmpeg, e.g.:
+    - With \'err_detect\' option you can provide the strict shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
     - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
     - Supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
@@ -173,7 +173,7 @@ def ffmpeg_check(filename, error_detect='default'):
     if error_detect == 'default':
         stream = ffmpeg.input(filename)
     else:
-        if error_detect == 'strong':
+        if error_detect == 'strict':
             custom = '+crccheck+bitstream+buffer+explode'
         else:
             custom = error_detect
