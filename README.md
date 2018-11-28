@@ -68,7 +68,7 @@ Check a folder, and subfolder recursiverly and also check media (audio and video
 Check a folder, and subfolder recursiverly and save bad files details to out.csv file:
 
 ```check_mi.py -r ./test_folder/files -c ./test_folder/output/out.csv```
-##Required Modules
+## Required Modules
 
 ```ffmpeg-python==0.1.17
 future==0.17.1
