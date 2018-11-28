@@ -7,7 +7,7 @@ This tool is able with 100% confidence to spot files that have broken header/met
 
 In the case you know ways to instruct Pillow, Wand and FFmpeg to be strcter when decoding, please tell me.
 
-help message:
+*check-mi* help:
 ```usage: check_mi.py [-h] [-c X] [-v] [-r] [-i] [-m] [-p] [-e] [-x E] P
 
 Checks integrity of Media files (Images, Video, Audio).
