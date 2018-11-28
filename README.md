@@ -68,6 +68,17 @@ Check a folder, and subfolder recursiverly and also check media (audio and video
 Check a folder, and subfolder recursiverly and save bad files details to out.csv file:
 
 ```check_mi.py -r ./test_folder/files -c ./test_folder/output/out.csv```
+##Required Modules
+
+```ffmpeg-python==0.1.17
+future==0.17.1
+Pillow-SIMD==5.3.0.post0
+PyPDF2==1.26.0
+Wand==0.4.5
+```
+You can also use the standard Pillow-PIL module, but it is far slower that Pillow-SIMD.
+
+In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS, you can fix this by creating a symbolic link *ffmpeg -> avconv* somewhere in your system search path.
 
 ##Test damage
 test_damage.py is a funny experiment, it evaluates the probability of a random damage to be detected by this tool.
