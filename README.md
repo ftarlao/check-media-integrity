@@ -1,5 +1,5 @@
 # check-media-integrity
-##Overview
+## Overview
 This tool automatically checks the integrity of media files (pictures, video, audio).
 The tool tests if common library (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files, but **image, audio and video format are very resilient to defects and damages**.
 
@@ -47,7 +47,7 @@ combination, e.g., +buffer+bitstream
 - Output CSV file, has the header raw, and one line for each bad file,
 providing: file name, error message, file size
 ```
-##Examples
+## Examples
 
 Check a single file:
 
