@@ -31,7 +31,7 @@ optional arguments:
 
 - Single file check ignores options -i,-m,-p,-e,-c
 
-- With 'err_detect' option you can provide the 'strong' shortcut or the flags
+- With 'err_detect' option you can provide the 'strict' shortcut or the flags
 supported by ffmpeg, e.g.: crccheck, bitstream, buffer, explode, or their
 combination, e.g., +buffer+bitstream
 
