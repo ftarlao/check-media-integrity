@@ -1,9 +1,12 @@
 # check-media-integrity
 ## Overview
-This tool automatically checks the integrity of media files (pictures, video, audio).
-The tool tests if common libraries (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files, but **image, audio and video format are very resilient to defects and damages**.
+This tool, *check-mi*, automatically checks the integrity of media files (pictures, video, audio).
+The tool tests if common libraries (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files.
+Warning, **image, audio and video formats are very resilient to defects and damages** for this reason the tool cannot detect all the damaged files.
 
-This tool is able with 100% confidence to spot files that have broken header/metadata and truncated image files.
+*check-mi* is able, with 100% confidence, to spot files that have broken header/metadata, truncated image files, and device i/o errors.
+*check-mi* is, usually, not able to detect minor damages--e.g. small portion of media file overwritten with different values.
+In detail, I have seen, with a small randomized experiment, that with a 2MB *jpeg* picture, you need to modify an interval of >= 512KBytes in order to get 70% chance of detecting the damage. 
 
 In the case you know ways to instruct Pillow, Wand and FFmpeg to be stricter when decoding, please tell me.
 
