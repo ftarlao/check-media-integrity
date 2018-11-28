@@ -80,7 +80,7 @@ You can also use the standard Pillow-PIL module, but it is far slower that Pillo
 
 In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS, you can fix this by creating a symbolic link *ffmpeg -> avconv* somewhere in your system search path.
 
-##Test damage
+## Test damage
 test_damage.py is a funny experiment, it evaluates the probability of a random damage to be detected by this tool.
 That is.. it is very low, the damage has to be in vital parts (very small portion of the file) or to be a file truncation.
 I think that the code is self explanatory.
