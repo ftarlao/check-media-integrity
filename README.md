@@ -5,10 +5,11 @@ The tool tests if common libraries (Pillow, ImageMagik, FFmpeg) are effectively 
 Warning, **image, audio and video formats are very resilient to defects and damages** for this reason the tool cannot detect all the damaged files.
 
 *check-mi* is able, with 100% confidence, to spot files that have broken header/metadata, truncated image files, and device i/o errors.
+
 *check-mi* is, usually, not able to detect all the minor damages--e.g. small portion of media file overwritten with different values.
 In detail, I have seen, with a small randomized experiment, that with a 5MB *jpeg* picture:
-Overwriting a portion of file (interval) with **zeros**, you need interval **size = 1024KBytes** in order to get **50%** chance of detecting the damage.
-Overwriting a portion of file (interval) with **different random values**, you obtain about **85%** detection ratio, for interval sizes ranging **from 4096bytes to 1024Kbytes**.
+- Overwriting a portion (interval) of image file with **zeros**, you need interval **size = 1024KBytes** in order to get **50%** chance of detecting the damage.
+- Overwriting a portion (interval) of image file with **different random values**, you obtain about **85%** detection ratio, for interval sizes ranging **from 4096bytes to 1024Kbytes**.
 
 In the case you know ways to instruct Pillow, Wand and FFmpeg to be stricter when decoding, please tell me.
 
