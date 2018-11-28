@@ -5,7 +5,7 @@ The tool tests if common library (Pillow, ImageMagik, FFmpeg) are effectively ab
 
 This tool is able with 100% confidence to spot files that have broken header/metadata and truncated image files.
 
-In the case you know ways to instruct Pillow, Wand and FFmpeg to be strcter when decoding, please tell me.
+In the case you know ways to instruct Pillow, Wand and FFmpeg to be stricter when decoding, please tell me.
 
 *check-mi* help:
 ```usage: check_mi.py [-h] [-c X] [-v] [-r] [-i] [-m] [-p] [-e] [-x E] P
