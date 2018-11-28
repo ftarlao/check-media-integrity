@@ -1,6 +1,6 @@
 # check-media-integrity
 ## Overview
-This tool, *check-mi*, automatically checks the integrity of media files (pictures, video, audio).
+*check-mi* is a Python 2.7 script that automatically checks the integrity of media files (pictures, video, audio).
 The tool tests if common libraries (Pillow, ImageMagik, FFmpeg) are effectively able to decode the media files.
 Warning, **image, audio and video formats are very resilient to defects and damages** for this reason the tool cannot detect all the damaged files.
 
