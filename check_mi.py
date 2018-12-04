@@ -67,7 +67,7 @@ class MultilineFormatter(argparse.HelpFormatter):
 def arg_parser():
     epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c,-t|n
     - strict_level: level 0 execution may be faster than level 1 and level 2 is the slowest one. 0 have low recall 
-    and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives 
+    and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives|n 
     - With \'err_detect\' option you can provide the strict shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
     - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
@@ -114,7 +114,7 @@ def arg_parser():
                         dest='threads', default=1)
     parser.add_argument('-T', '--timeout', metavar='K', type=int,
                         help='Number of seconds to wait for new performed checks in queue, default is 120 sec, you need'
-                             'to raise the default when working with video files (usually) bigger than few GBytes',
+                             ' to raise the default when working with video files (usually) bigger than few GBytes',
                         dest='timeout', default=120)
 
     parse_out = parser.parse_args()
