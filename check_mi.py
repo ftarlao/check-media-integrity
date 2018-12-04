@@ -105,9 +105,9 @@ def arg_parser():
                         dest='error_detect', default='default')
     parser.add_argument('-l', '--strict_level', metavar='L', type=int,
                         help='Uses different apporach for checking images depending on %(metavar)s integer value. '
-                             'Accepted values 0,1,2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
+                             'Accepted values 0,1 (default),2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
                              '2 applies both 0+1 checks',
-                        dest='strict_level', default=0)
+                        dest='strict_level', default=1)
     parser.add_argument('-t', '--threads', metavar='T', type=int,
                         help='number of parallel threads used for speedup, default is one. Single file execution does'
                              'not take advantage of the thread option',
