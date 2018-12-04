@@ -16,7 +16,8 @@ In detail, I have tested *strict_level* one, with a small randomized experiment,
 In the case you know ways to instruct Pillow, Wand and FFmpeg to be stricter when decoding, please tell me.
 
 *check-mi* help:
-```usage: check_mi.py [-h] [-c X] [-v] [-r] [-z Z] [-i] [-m] [-p] [-e] [-x E]
+```
+usage: check_mi.py [-h] [-c X] [-v] [-r] [-z Z] [-i] [-m] [-p] [-e] [-x E]
                    [-l L] [-t T] [-T K]
                    P
 
