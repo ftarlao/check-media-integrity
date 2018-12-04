@@ -22,7 +22,7 @@ import sys
 
 
 def damage_file(filename, offset, size, full_noise=False):
-    num_noise = 0#random.randrange(256)
+    num_noise = 0  # random.randrange(256)
     bytes = bytearray(size)
     for i in range(len(bytes)):
         bytes[i] = random.randrange(256) if full_noise else num_noise
@@ -47,7 +47,7 @@ def random_damage_clone(filename, dest_filename, size, full_noise=False):
     statinfo = os.stat(filename)
     file_size = statinfo.st_size
     offset = random.randrange(file_size)
-    damage_clone(filename, dest_filename, offset, min(size, file_size - offset),full_noise=full_noise)
+    damage_clone(filename, dest_filename, offset, min(size, file_size - offset), full_noise=full_noise)
 
 
 def random_truncate_clone(filename, dest_filename, max_perc):
@@ -56,9 +56,9 @@ def random_truncate_clone(filename, dest_filename, max_perc):
     truncate_clone(filename, dest_filename, file_size)
 
 
-NUMBER_PER_CASE = 20
-DAMAGE_SIZES = [4096, 16556, 256000, 2 * 1048576]
-PERC_TRUNC = []
+NUMBER_PER_CASE = 10
+DAMAGE_SIZES = [512, 16556, 256000, 512000]
+PERC_TRUNC = [1, 10]
 
 
 def main():
@@ -79,51 +79,66 @@ def main():
         if damage_size >= orig_statinfo.st_size:
             break
 
-        errors_def = 0
-        errors_str = 0
+        errors_0 = 0
+        errors_1 = 0
+        errors_2 = 0
 
         for i in range(NUMBER_PER_CASE):
-            random_damage_clone(test_file, dest_test_file, damage_size,full_noise=True)
-            res_def = check_mi.check_file(dest_test_file, error_detect='default')
+            random_damage_clone(test_file, dest_test_file, damage_size, full_noise=True)
+            res_def = check_mi.check_file(dest_test_file, strict_level=0)
             if not res_def[0]:
-                errors_def += 1
-            res_str = check_mi.check_file(dest_test_file, error_detect='strong')
-            if not res_str[0]:
-                errors_str += 1
+                errors_0 += 1
+            res_1 = check_mi.check_file(dest_test_file, strict_level=1)
+            if not res_1[0]:
+                errors_1 += 1
+            res_2 = check_mi.check_file(dest_test_file, strict_level=2)
+            if not res_2[0]:
+                errors_2 += 1
         print "DAMAGE SIZE[bytes] random noise", damage_size
-        print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
-        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
+        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
+        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
 
-        errors_def = 0
-        errors_str = 0
+        errors_0 = 0
+        errors_1 = 0
+        errors_2 = 0
 
         for i in range(NUMBER_PER_CASE):
             random_damage_clone(test_file, dest_test_file, damage_size, full_noise=False)
-            res_def = check_mi.check_file(dest_test_file, error_detect='default')
+            res_def = check_mi.check_file(dest_test_file, strict_level=0)
             if not res_def[0]:
-                errors_def += 1
-            res_str = check_mi.check_file(dest_test_file, error_detect='strong')
-            if not res_str[0]:
-                errors_str += 1
-        print "DAMAGE SIZE[bytes] all zeros", damage_size
-        print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
-        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+                errors_0 += 1
+            res_1 = check_mi.check_file(dest_test_file, strict_level=1)
+            if not res_1[0]:
+                errors_1 += 1
+            res_2 = check_mi.check_file(dest_test_file, strict_level=2)
+            if not res_2[0]:
+                errors_2 += 1
+        print "DAMAGE SIZE[bytes] zero-fill portion", damage_size
+        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
+        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
+        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
 
     for perc in PERC_TRUNC:
-        errors_def = 0
-        errors_str = 0
+        errors_0 = 0
+        errors_1 = 0
+        errors_2 = 0
 
         for i in range(NUMBER_PER_CASE):
             random_truncate_clone(test_file, dest_test_file, perc)
-            res_def = check_mi.check_file(dest_test_file, error_detect='default')
+            res_def = check_mi.check_file(dest_test_file, strict_level=0)
             if not res_def[0]:
-                errors_def += 1
-            res_str = check_mi.check_file(dest_test_file, error_detect='strong')
-            if not res_str[0]:
-                errors_str += 1
+                errors_0 += 1
+            res_1 = check_mi.check_file(dest_test_file, strict_level=1)
+            if not res_1[0]:
+                errors_1 += 1
+            res_2 = check_mi.check_file(dest_test_file, strict_level=2)
+            if not res_2[0]:
+                errors_2 += 1
         print "TRUNCATE SIZE %", perc
-        print "Detected damages default:", 100 * float(errors_def) / NUMBER_PER_CASE, "%"
-        print "Detected damages strong (affects only video):", 100 * float(errors_str) / NUMBER_PER_CASE, "%"
+        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
+        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
+        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
 
 
 if __name__ == "__main__":

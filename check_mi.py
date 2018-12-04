@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import warnings
+from Queue import Empty
+from multiprocessing import Pool, Queue, Process
 
 __author__ = "Fabiano Tarlao"
 __copyright__ = "Copyright 2018, Fabiano Tarlao"
@@ -19,7 +22,7 @@ import PyPDF2
 import csv
 import ffmpeg
 import argparse
-
+from subprocess import Popen, PIPE
 
 LICENSE = "Copyright (C) 2018  Fabiano Tarlao.\nThis program comes with ABSOLUTELY NO WARRANTY.\n" \
           "This is free software, and you are welcome to redistribute it under GPL3 license conditions"
@@ -62,7 +65,9 @@ class MultilineFormatter(argparse.HelpFormatter):
 
 
 def arg_parser():
-    epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c|n
+    epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c,-t|n
+    - strict_level: level 0 execution may be faster than level 1 and level 2 is the slowest one. 0 have low recall 
+    and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives 
     - With \'err_detect\' option you can provide the strict shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
     - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
@@ -80,6 +85,11 @@ def arg_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-r', '--recurse', action='store_true', help='Recurse subdirs',
                         dest='is_recurse')
+    parser.add_argument('-z', '--enable_zero_detect', metavar='Z', type=int,
+                        help='Detects when files contains a byte sequence of at least Z equal bytes. case is '
+                             'common for most file , jpeg too, you need to set high %(metavar)s values for this '
+                             'check to make sense',
+                        dest='zero_detect', default=0)
     parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
                         dest='is_disable_image')
     parser.add_argument('-m', '--enable-media', action='store_true', help='Enable check for audio/video files',
@@ -90,8 +100,22 @@ def arg_parser():
                                                                            '(psd, xcf,. and rare ones)',
                         dest='is_disable_extra')
     parser.add_argument('-x', '--err-detect', metavar='E', type=str,
-                        help='Execute ffmpeg decoding with a specific err_detect flag %(metavar)s, \'strict\' is shortcut for +crccheck+bitstream+buffer+explode',
+                        help='Execute ffmpeg decoding with a specific err_detect flag %(metavar)s, \'strict\' is '
+                             'shortcut for +crccheck+bitstream+buffer+explode',
                         dest='error_detect', default='default')
+    parser.add_argument('-l', '--strict_level', metavar='L', type=int,
+                        help='Uses different apporach for checking images depending on %(metavar)s integer value. '
+                             'Accepted values 0,1,2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
+                             '2 applies both 0+1 checks',
+                        dest='strict_level', default=0)
+    parser.add_argument('-t', '--threads', metavar='T', type=int,
+                        help='number of parallel threads used for speedup, default is one. Single file execution does'
+                             'not take advantage of the thread option',
+                        dest='threads', default=1)
+    parser.add_argument('-T', '--timeout', metavar='K', type=int,
+                        help='Number of seconds to wait for new performed checks in queue, default is 120 sec, you need'
+                             'to raise the default when working with video files (usually) bigger than few GBytes',
+                        dest='timeout', default=120)
 
     parse_out = parser.parse_args()
     parse_out.enable_csv = parse_out.csv_filename is not None
@@ -147,6 +171,16 @@ def magick_check(filename, flip=True):
     return temp
 
 
+def magick_identify_check(filename):
+    proc = Popen(['identify', '-regard-warnings', filename], stdout=PIPE,
+                 stderr=PIPE)  # '-verbose',
+    out, err = proc.communicate()
+    exitcode = proc.returncode
+    if exitcode != 0:
+        raise Exception('Identify error:' + str(exitcode))
+    return out
+
+
 def pypdf_check(filename):
     # PDF format
     # Check with specific library
@@ -156,21 +190,51 @@ def pypdf_check(filename):
     magick_check(filename, False)
 
 
-def size_check(filename):
+def check_zeros(filename, length_seq_threshold=None):
+    f = open(filename, "rb")
+    thefilearray = f.read()
+    f.close()
+    num = 1
+    maxnum = num
+    prev = None
+    maxprev = None
+    for i in thefilearray:
+        if prev == i:
+            num += 1
+        else:
+            if num > maxnum:
+                maxnum = num
+                maxprev = prev
+            num = 1
+            prev = i
+    if num > maxnum:
+        maxnum = num
+    if length_seq_threshold is None:
+        return maxnum
+    else:
+        if maxnum >= length_seq_threshold:
+            raise Exception("Equal value sequence, value:", maxprev, "len:", maxnum)
+
+
+def check_size(filename, zero_exception=True):
     statfile = os.stat(filename)
     filesize = statfile.st_size
-    if filesize == 0:
+    if filesize == 0 and zero_exception:
         raise SyntaxError("Zero size file")
     return filesize
 
 
-def is_target_file(filename):
+def get_extension(filename):
     file_lowercase = filename.lower()
-    file_ext = os.path.splitext(file_lowercase)[1][1:]
+    return os.path.splitext(file_lowercase)[1][1:]
+
+
+def is_target_file(filename):
+    file_ext = get_extension(filename)
     return file_ext in MEDIA_EXTENSIONS
 
 
-def ffmpeg_check(filename, error_detect='default'):
+def ffmpeg_check(filename, error_detect='default', threads=0):
     if error_detect == 'default':
         stream = ffmpeg.input(filename)
     else:
@@ -178,7 +242,7 @@ def ffmpeg_check(filename, error_detect='default'):
             custom = '+crccheck+bitstream+buffer+explode'
         else:
             custom = error_detect
-        stream = ffmpeg.input(filename, **{'err_detect': custom})
+        stream = ffmpeg.input(filename, **{'err_detect': custom, 'threads': threads})
 
     stream = stream.output('pipe:', format="null")
     stream.run(capture_stdout=True, capture_stderr=True)
@@ -225,11 +289,7 @@ def is_pil_simd():
     return 'post' in PIL.PILLOW_VERSION
 
 
-def is_ffmpeg():
-    print "this is a stub"
-
-
-def check_file(filename, error_detect='default'):
+def check_file(filename, error_detect='default', strict_level=0, ffmpeg_threads=0):
     if sys.version_info[0] < 3:
         filename = filename.decode('utf8')
 
@@ -239,19 +299,30 @@ def check_file(filename, error_detect='default'):
     file_size = 'NA'
 
     try:
-        file_size = size_check(filename)
+        file_size = check_size(filename)
+        if CONFIG.zero_detect > 0:
+            check_zeros(filename, CONFIG.zero_detect)
 
         if file_ext in PIL_EXTENSIONS:
-            pil_check(filename)
+            if strict_level in [1, 2]:
+                pil_check(filename)
+            if strict_level in [0, 2]:
+                magick_identify_check(filename)
 
         if file_ext in PDF_EXTENSIONS:
-            pypdf_check(filename)
+            if strict_level in [1, 2]:
+                pypdf_check(filename)
+            if strict_level in [0, 2]:
+                magick_identify_check(filename)
 
         if file_ext in MAGICK_EXTENSIONS:
-            magick_check(filename)
+            if strict_level in [1, 2]:
+                magick_check(filename)
+            if strict_level in [0, 2]:
+                magick_identify_check(filename)
 
         if file_ext in VIDEO_EXTENSIONS:
-            ffmpeg_check(filename, error_detect=error_detect)
+            ffmpeg_check(filename, error_detect=error_detect, threads=ffmpeg_threads)
 
     # except ffmpeg.Error as e:
     #     # print e.stderr
@@ -268,13 +339,27 @@ def log_check_outcome(check_outcome_detail):
         1], ", size[bytes]:", check_outcome_detail[2]
 
 
+def worker(in_queue, out_queue):
+    try:
+        while True:
+            full_filename = in_queue.get(block=True, timeout=2)
+            is_success = check_file(full_filename, CONFIG.error_detect, strict_level=CONFIG.strict_level)
+            out_queue.put(is_success)
+    except Empty:
+        print "Closing parallel worker, the worker has no more tasks to perform"
+        return
+    except Exception as e:
+        print "Parallel worker got unexpected error", str(e)
+        sys.exit(1)
+
+
 def main():
     global CONFIG
     if not is_pil_simd():
         print "********WARNING*******************************************************"
         print "You are using Python Pillow PIL module and not the Pillow-SIMD module."
         print "Pillow-SIMD is a 4x faster drop-in replacement of the base PIL module."
-        print "Uninstalling Pillow and installing Pillow-SIMD is a good idea."
+        print "Uninstalling Pillow PIL and installing Pillow-SIMD is a good idea."
         print "**********************************************************************"
 
     CONFIG = arg_parser()
@@ -303,6 +388,10 @@ def main():
     bad_files_info = [("file_name", "error_message", "file_size[bytes]")]
     timed_logger = TimedLogger().start()
 
+    task_queue = Queue()
+    out_queue = Queue()
+    pre_count = 0
+
     for root, sub_dirs, files in os.walk(check_path):
 
         media_files = []
@@ -310,11 +399,26 @@ def main():
             if is_target_file(filename):
                 media_files.append(filename)
 
+        pre_count += len(media_files)
+
         for filename in media_files:
             full_filename = os.path.join(root, filename)
+            task_queue.put(full_filename)
+
+        if not CONFIG.is_recurse:
+            break  # we only check the root folder
+
+    for i in range(CONFIG.threads):
+        p = Process(target=worker, args=(task_queue, out_queue,))
+        p.start()
+
+    # consume the outcome
+    try:
+        for j in range(pre_count):
+
             count += 1
 
-            is_success = check_file(full_filename, CONFIG.error_detect)
+            is_success = out_queue.get(block=True, timeout=CONFIG.timeout)
             file_size = is_success[1][2]
             if file_size != 'NA':
                 total_file_size += file_size
@@ -324,22 +428,23 @@ def main():
                 count_bad += 1
                 bad_files_info.append(check_outcome_detail)
                 log_check_outcome(check_outcome_detail)
+                # print "RATIO:", count_bad, "/", count
 
             # visualization logs and stats
             timed_logger.print_log(count, count_bad, total_file_size)
-
-        if not CONFIG.is_recurse:
-            break  # we only check the root folder
-
+    except Empty as e:
+        print "Waiting other results for too much time, perhaps you have to raise the timeout", e.message
     print "\n**Task completed**\n"
     timed_logger.print_log(count, count_bad, total_file_size, force=True)
 
     if count_bad > 0 and CONFIG.enable_csv:
-        print "\nBad files details in CSV format, file path:", CONFIG.csv_filename
+        print "\nSave details for bad files in CSV format, file path:", CONFIG.csv_filename
         save_csv(CONFIG.csv_filename, bad_files_info)
 
     if count_bad == 0:
         print "The files are OK :-)"
+    else:
+        print "Few files look damaged :-("
 
 
 if __name__ == "__main__":
