@@ -289,7 +289,7 @@ def is_pil_simd():
     return 'post' in PIL.PILLOW_VERSION
 
 
-def check_file(filename, error_detect='default', strict_level=0, ffmpeg_threads=0):
+def check_file(filename, error_detect='default', strict_level=0, zero_detect=0, ffmpeg_threads=0):
     if sys.version_info[0] < 3:
         filename = filename.decode('utf8')
 
@@ -300,7 +300,7 @@ def check_file(filename, error_detect='default', strict_level=0, ffmpeg_threads=
 
     try:
         file_size = check_size(filename)
-        if CONFIG.zero_detect > 0:
+        if zero_detect > 0:
             check_zeros(filename, CONFIG.zero_detect)
 
         if file_ext in PIL_EXTENSIONS:
@@ -343,7 +343,7 @@ def worker(in_queue, out_queue):
     try:
         while True:
             full_filename = in_queue.get(block=True, timeout=2)
-            is_success = check_file(full_filename, CONFIG.error_detect, strict_level=CONFIG.strict_level)
+            is_success = check_file(full_filename, CONFIG.error_detect, strict_level=CONFIG.strict_level, zero_detect=CONFIG.zero_detect)
             out_queue.put(is_success)
     except Empty:
         print "Closing parallel worker, the worker has no more tasks to perform"
