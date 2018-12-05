@@ -33,9 +33,8 @@ optional arguments:
   -r, --recurse         Recurse subdirs
   -z Z, --enable_zero_detect Z
                         Detects when files contains a byte sequence of at
-                        least Z equal bytes. case is common for most file ,
-                        jpeg too, you need to set high Z values for this check
-                        to make sense
+                        least Z equal bytes. This case is quite common, for
+                        jpeg format too, you need to set high Z values
   -i, --disable-images  Ignore image files
   -m, --enable-media    Enable check for audio/video files
   -p, --disable-pdf     Ignore pdf files
