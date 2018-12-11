@@ -65,55 +65,55 @@ class MultilineFormatter(argparse.HelpFormatter):
 
 
 def arg_parser():
-    epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c,-t|n
+    epilog_details = """- single file check ignores options -i,-m,-p,-e,-c,-t|n
     - strict_level: execution speed for level 0 > level 1 > level 2. Level 0 algorithm has low recall 
     and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives|n 
-    - With \'err_detect\' option you can provide the 'strict' shortcut or the flags supported by ffmpeg, e.g.:
+    - with \'err_detect\' option you can provide the 'strict' shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
-    - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
-    - Supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
-    - Supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS) + """|n
-    - Output CSV file, has the header raw, and one line for each bad file, providing: file name, error message, 
+    - supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
+    - supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
+    - supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS) + """|n
+    - output CSV file, has the header raw, and one line for each bad file, providing: file name, error message, 
     file size"""
 
     parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
                                      epilog=epilog_details, formatter_class=MultilineFormatter)
     parser.add_argument('checkpath', metavar='P', type=str,
-                        help='Path to the file or folder')
+                        help='path to the file or folder')
     parser.add_argument('-c', '--csv', metavar='X', type=str,
-                        help='Save bad files details on csv file %(metavar)s', dest='csv_filename')
+                        help='save bad files details on csv file %(metavar)s', dest='csv_filename')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-    parser.add_argument('-r', '--recurse', action='store_true', help='Recurse subdirs',
+    parser.add_argument('-r', '--recurse', action='store_true', help='recurse subdirs',
                         dest='is_recurse')
     parser.add_argument('-z', '--enable_zero_detect', metavar='Z', type=int,
-                        help='Detects when files contain a byte sequence of at least Z equal bytes. This case is '
+                        help='detects when files contain a byte sequence of at least Z equal bytes. This case is '
                              'common for most file formats, jpeg too, you need to set high %(metavar)s values for this '
                              'check to make sense',
                         dest='zero_detect', default=0)
-    parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
+    parser.add_argument('-i', '--disable-images', action='store_true', help='ignore image files',
                         dest='is_disable_image')
-    parser.add_argument('-m', '--enable-media', action='store_true', help='Enable check for audio/video files',
+    parser.add_argument('-m', '--enable-media', action='store_true', help='enable check for audio/video files',
                         dest='is_enable_media')
-    parser.add_argument('-p', '--disable-pdf', action='store_true', help='Ignore pdf files',
+    parser.add_argument('-p', '--disable-pdf', action='store_true', help='ignore pdf files',
                         dest='is_disable_pdf')
-    parser.add_argument('-e', '--disable-extra', action='store_true', help='Ignore extra image extensions '
+    parser.add_argument('-e', '--disable-extra', action='store_true', help='ignore extra image extensions '
                                                                            '(psd, xcf,. and rare ones)',
                         dest='is_disable_extra')
     parser.add_argument('-x', '--err-detect', metavar='E', type=str,
-                        help='Execute ffmpeg decoding with a specific err_detect flag %(metavar)s, \'strict\' is '
+                        help='execute ffmpeg decoding with a specific err_detect flag %(metavar)s, \'strict\' is '
                              'shortcut for +crccheck+bitstream+buffer+explode',
                         dest='error_detect', default='default')
     parser.add_argument('-l', '--strict_level', metavar='L', type=int,
-                        help='Uses different apporach for checking images depending on %(metavar)s integer value. '
+                        help='uses different apporach for checking images depending on %(metavar)s integer value. '
                              'Accepted values 0,1 (default),2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
                              '2 applies both 0+1 checks',
                         dest='strict_level', default=1)
     parser.add_argument('-t', '--threads', metavar='T', type=int,
-                        help='Number of parallel threads used for speedup, default is one. Single file execution does'
+                        help='number of parallel threads used for speedup, default is one. Single file execution does'
                              'not take advantage of the thread option',
                         dest='threads', default=1)
     parser.add_argument('-T', '--timeout', metavar='K', type=int,
-                        help='Number of seconds to wait for new performed checks in queue, default is 120 sec, you need'
+                        help='number of seconds to wait for new performed checks in queue, default is 120 sec, you need'
                              ' to raise the default when working with video files (usually) bigger than few GBytes',
                         dest='timeout', default=120)
 
