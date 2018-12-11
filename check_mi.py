@@ -66,9 +66,9 @@ class MultilineFormatter(argparse.HelpFormatter):
 
 def arg_parser():
     epilog_details = """- Single file check ignores options -i,-m,-p,-e,-c,-t|n
-    - strict_level: level 0 execution may be faster than level 1 and level 2 is the slowest one. 0 have low recall 
+    - strict_level: execution speed for level 0 > level 1 > level 2. Level 0 algorithm has low recall 
     and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives|n 
-    - With \'err_detect\' option you can provide the strict shortcut or the flags supported by ffmpeg, e.g.:
+    - With \'err_detect\' option you can provide the 'strict' shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
     - Supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
     - Supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
@@ -79,15 +79,15 @@ def arg_parser():
     parser = argparse.ArgumentParser(description='Checks integrity of Media files (Images, Video, Audio).',
                                      epilog=epilog_details, formatter_class=MultilineFormatter)
     parser.add_argument('checkpath', metavar='P', type=str,
-                        help='path to the file or folder')
+                        help='Path to the file or folder')
     parser.add_argument('-c', '--csv', metavar='X', type=str,
                         help='Save bad files details on csv file %(metavar)s', dest='csv_filename')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-r', '--recurse', action='store_true', help='Recurse subdirs',
                         dest='is_recurse')
     parser.add_argument('-z', '--enable_zero_detect', metavar='Z', type=int,
-                        help='Detects when files contains a byte sequence of at least Z equal bytes. case is '
-                             'common for most file , jpeg too, you need to set high %(metavar)s values for this '
+                        help='Detects when files contain a byte sequence of at least Z equal bytes. This case is '
+                             'common for most file formats, jpeg too, you need to set high %(metavar)s values for this '
                              'check to make sense',
                         dest='zero_detect', default=0)
     parser.add_argument('-i', '--disable-images', action='store_true', help='Ignore image files',
@@ -109,7 +109,7 @@ def arg_parser():
                              '2 applies both 0+1 checks',
                         dest='strict_level', default=1)
     parser.add_argument('-t', '--threads', metavar='T', type=int,
-                        help='number of parallel threads used for speedup, default is one. Single file execution does'
+                        help='Number of parallel threads used for speedup, default is one. Single file execution does'
                              'not take advantage of the thread option',
                         dest='threads', default=1)
     parser.add_argument('-T', '--timeout', metavar='K', type=int,
