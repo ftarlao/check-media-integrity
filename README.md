@@ -49,7 +49,7 @@ optional arguments:
                         ImageMagick idenitfy, 1 Pillow library+ImageMagick, 2
                         applies both 0+1 checks
   -t T, --threads T     number of parallel threads used for speedup, default
-                        is one. Single file execution doesnot take advantage
+                        is one. Single file execution does not take advantage
                         of the thread option
   -T K, --timeout K     Number of seconds to wait for new performed checks in
                         queue, default is 120 sec, you need to raise the
@@ -84,7 +84,7 @@ Check a single file (remind, strict_level default is 1 and number of threads def
 
 ```check_mi.py ./test_folder/files/050807-124755t.jpg```
 
-Check a folder:
+Check a folder (folder ```files```, contains the media files):
 
 ```check_mi.py ./test_folder/files```
 
