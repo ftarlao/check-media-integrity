@@ -111,7 +111,7 @@ Pillow-SIMD==5.3.0.post0
 PyPDF2==1.26.0
 Wand==0.4.5
 ```
-You can also use the standard Pillow-PIL module, but it is far slower that Pillow-SIMD.
+You can also use the standard Pillow-PIL module, but it is far slower than Pillow-SIMD.
 
 In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS, you can fix this by creating a symbolic link *ffmpeg -> full/path/to/avconv* somewhere in your system search path.
 
