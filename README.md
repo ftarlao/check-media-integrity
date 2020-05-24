@@ -1,16 +1,6 @@
 # check-media-integrity
 
-- Converted from Python2.7 to Python 3 (3.8).
-- Quick fix for the error:
-```
-********WARNING*******************************************************
-You are using Python Pillow PIL module and not the Pillow-SIMD module.
-Pillow-SIMD is a 4x faster drop-in replacement of the base PIL module.
-Uninstalling Pillow PIL and installing Pillow-SIMD is a good idea.
-**********************************************************************
-Files integrity check for: c:\LiClipseWorkspace\check-media-integrity\src\test_folder\
-Parallel worker got unexpected error 'NoneType' object has no attribute 'error_detect'
-```
+- Converted from Python2.7 to Python 3 (3.8) .. come with bugfixes :-)
 
 ## Overview
 *check-mi* is a Python 2.7 script that automatically checks the integrity of media files (pictures, video, audio).
