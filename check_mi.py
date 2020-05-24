@@ -279,9 +279,9 @@ class TimedLogger:
             speed_IS = num_files / from_start_delta
             processed_size_MB = float(total_file_size) / (1024 * 1024)
 
-            print ("Number of bad/processed files:", num_bad_files, "/", num_files, ", size of processed files:", \
+            print("Number of bad/processed files:", num_bad_files, "/", num_files, ", size of processed files:", \
                 "{0:0.1f}".format(processed_size_MB), "MB")
-            print ("Processing speed:", "{0:0.1f}".format(speed_MB), "MB/s, or", "{0:0.1f}".format(
+            print("Processing speed:", "{0:0.1f}".format(speed_MB), "MB/s, or", "{0:0.1f}".format(
                 speed_IS), "files/s")
 
 
@@ -335,7 +335,7 @@ def check_file(filename, error_detect='default', strict_level=0, zero_detect=0, 
 
 
 def log_check_outcome(check_outcome_detail):
-    print ("Bad file:", check_outcome_detail[0], ", error detail:", check_outcome_detail[
+    print("Bad file:", check_outcome_detail[0], ", error detail:", check_outcome_detail[
         1], ", size[bytes]:", check_outcome_detail[2])
 
 
@@ -346,27 +346,27 @@ def worker(in_queue, out_queue, CONFIG):
             is_success = check_file(full_filename, CONFIG.error_detect, strict_level=CONFIG.strict_level, zero_detect=CONFIG.zero_detect)
             out_queue.put(is_success)
     except Empty:
-        print ("Closing parallel worker, the worker has no more tasks to perform")
+        print("Closing parallel worker, the worker has no more tasks to perform")
         return
     except Exception as e:
-        print ("Parallel worker got unexpected error", str(e))
+        print("Parallel worker got unexpected error", str(e))
         sys.exit(1)
 
 
 def main():
     global CONFIG
     if not is_pil_simd():
-        print ("********WARNING*******************************************************")
-        print ("You are using Python Pillow PIL module and not the Pillow-SIMD module.")
-        print ("Pillow-SIMD is a 4x faster drop-in replacement of the base PIL module.")
-        print ("Uninstalling Pillow PIL and installing Pillow-SIMD is a good idea.")
-        print ("**********************************************************************")
+        print("********WARNING*******************************************************")
+        print("You are using Python Pillow PIL module and not the Pillow-SIMD module.")
+        print("Pillow-SIMD is a 4x faster drop-in replacement of the base PIL module.")
+        print("Uninstalling Pillow PIL and installing Pillow-SIMD is a good idea.")
+        print("**********************************************************************")
 
     CONFIG = arg_parser()
     setup(CONFIG)
     check_path = CONFIG.checkpath
 
-    print ("Files integrity check for:", check_path)
+    print("Files integrity check for:", check_path)
 
     if os.path.isfile(check_path):
         # manage single file check
@@ -376,7 +376,7 @@ def main():
             log_check_outcome(check_outcome_detail)
             sys.exit(1)
         else:
-            print ("File", check_path, "is OK")
+            print("File", check_path, "is OK")
             sys.exit(0)
 
     # manage folder (searches media files into)
@@ -433,18 +433,18 @@ def main():
             # visualization logs and stats
             timed_logger.print_log(count, count_bad, total_file_size)
     except Empty as e:
-        print ("Waiting other results for too much time, perhaps you have to raise the timeout", e.message)
-    print ("\n**Task completed**\n")
+        print("Waiting other results for too much time, perhaps you have to raise the timeout", e.message)
+    print("\n**Task completed**\n")
     timed_logger.print_log(count, count_bad, total_file_size, force=True)
 
     if count_bad > 0 and CONFIG.enable_csv:
-        print ("\nSave details for bad files in CSV format, file path:", CONFIG.csv_filename)
+        print("\nSave details for bad files in CSV format, file path:", CONFIG.csv_filename)
         save_csv(CONFIG.csv_filename, bad_files_info)
 
     if count_bad == 0:
-        print ("The files are OK :-)")
+        print("The files are OK :-)")
     else:
-        print ("Few files look damaged :-(")
+        print("Few files look damaged :-(")
 
 
 if __name__ == "__main__":
