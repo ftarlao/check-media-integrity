@@ -10,7 +10,7 @@ __author__ = "Fabiano Tarlao"
 __copyright__ = "Copyright 2018, Fabiano Tarlao"
 __credits__ = ["Fabiano Tarlao"]
 __license__ = "GPL3"
-__version__ = "0.9.3"
+__version__ = "0.9.4"
 __maintainer__ = "Fabiano Tarlao"
 __status__ = "Beta"
 
