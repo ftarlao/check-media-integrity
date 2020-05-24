@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This script works in Linux, not tested in Windows
@@ -74,7 +74,7 @@ def main():
 
     random.seed = 1
 
-    print "Original image size:", orig_statinfo.st_size
+    print("Original image size:", orig_statinfo.st_size)
     for damage_size in DAMAGE_SIZES:
         if damage_size >= orig_statinfo.st_size:
             break
@@ -94,10 +94,10 @@ def main():
             res_2 = check_mi.check_file(dest_test_file, strict_level=2)
             if not res_2[0]:
                 errors_2 += 1
-        print "DAMAGE SIZE[bytes] random noise", damage_size
-        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
-        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
-        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
+        print("DAMAGE SIZE[bytes] random noise", damage_size)
+        print("Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%")
+        print("Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%")
+        print("Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%")
 
         errors_0 = 0
         errors_1 = 0
@@ -114,10 +114,10 @@ def main():
             res_2 = check_mi.check_file(dest_test_file, strict_level=2)
             if not res_2[0]:
                 errors_2 += 1
-        print "DAMAGE SIZE[bytes] zero-fill portion", damage_size
-        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
-        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
-        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
+        print("DAMAGE SIZE[bytes] zero-fill portion", damage_size)
+        print("Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%")
+        print("Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%")
+        print("Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%")
 
     for perc in PERC_TRUNC:
         errors_0 = 0
@@ -135,10 +135,10 @@ def main():
             res_2 = check_mi.check_file(dest_test_file, strict_level=2)
             if not res_2[0]:
                 errors_2 += 1
-        print "TRUNCATE SIZE %", perc
-        print "Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%"
-        print "Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%"
-        print "Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%"
+        print("TRUNCATE SIZE %", perc)
+        print("Detected damages 0:", 100 * float(errors_0) / NUMBER_PER_CASE, "%")
+        print("Detected damages 1:", 100 * float(errors_1) / NUMBER_PER_CASE, "%")
+        print("Detected damages 2:", 100 * float(errors_2) / NUMBER_PER_CASE, "%")
 
 
 if __name__ == "__main__":
