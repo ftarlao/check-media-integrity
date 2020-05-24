@@ -1,6 +1,6 @@
 # check-media-integrity
 
-- Converted from Python2.7 to Python 3 (3.8) .. come with bugfixes :-)
+- Converted from Python2.7 to Python 3 (3.8) .. comes with bugfixes :-)
 
 ## Overview
 *check-mi* is a Python 2.7 script that automatically checks the integrity of media files (pictures, video, audio).
