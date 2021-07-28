@@ -286,7 +286,7 @@ class TimedLogger:
 
 
 def is_pil_simd():
-    return 'post' in PIL.PILLOW_VERSION
+    return 'post' in PIL.__version__
 
 
 def check_file(filename, error_detect='default', strict_level=0, zero_detect=0, ffmpeg_threads=0):
