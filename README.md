@@ -108,14 +108,16 @@ Check a folder, and subfolder recursiverly using 4 processes/threads, and save b
 ```check_mi.py -r -t 4 ./test_folder/files -c ./test_folder/output/out.csv```
 ## Required Modules
 
+This is what I'm using in my dev env, but different versions may work...
+
 ```ffmpeg-python==0.1.17
 future==0.17.1
-Pillow-SIMD==5.3.0.post0
+Pillow-SIMD==7.0.0.post3
 PyPDF2==1.26.0
 Wand==0.4.5
 ```
 You can also use the standard Pillow-PIL module, but it is far slower than Pillow-SIMD.
-Please consider that Pillow ver > 7.0.0 removed the PILLOW_VERSION variabile, that is currently used. The highest compatible version is 6.2.2
+Now the implementation wotks with PIL-SIMD all versions ( > < = to 6.2.2 )
 
 In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS, you can fix this by creating a symbolic link *ffmpeg -> full/path/to/avconv* somewhere in your system search path.
 
