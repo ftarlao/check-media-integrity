@@ -423,7 +423,7 @@ def main():
             # visualization logs and stats
             timed_logger.print_log(count, count_bad, total_file_size)
     except Empty as e:
-        print("Waiting other results for too much time, perhaps you have to raise the timeout", e.message)
+        print("Waiting other results for too much time, perhaps you have to raise the timeout", str(e))
     print("\n**Task completed**\n")
     timed_logger.print_log(count, count_bad, total_file_size, force=True)
 
