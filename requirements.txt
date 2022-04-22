@@ -1,5 +1,5 @@
 ffmpeg-python==0.1.17
 future==0.17.1
 Pillow-SIMD==5.3.0.post0
-PyPDF2==1.26.0
+PyPDF2==1.27.5
 Wand==0.4.5
