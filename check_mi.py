@@ -245,7 +245,7 @@ def ffmpeg_check(filename, error_detect='default', threads=0):
         stream = ffmpeg.input(filename, **{'err_detect': custom, 'threads': threads})
 
     stream = stream.output('pipe:', format="null")
-    stream.run(capture_stdout=True, capture_stderr=True)
+    stream.run(capture_stdout=True, capture_stderr=True, input='')
 
 
 def save_csv(filename, data):
