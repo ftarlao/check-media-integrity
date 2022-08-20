@@ -245,7 +245,13 @@ def ffmpeg_check(filename, error_detect='default', threads=0):
         stream = ffmpeg.input(filename, **{'err_detect': custom, 'threads': threads})
 
     stream = stream.output('pipe:', format="null")
-    stream.run(capture_stdout=True, capture_stderr=True, input='')
+    try:
+        stream.run(capture_stdout=True, capture_stderr=True, input='')
+    except ffmpeg.Error as e:
+        raise Exception(
+            'ffmpeg error: ' +
+            e.stderr.rstrip().rsplit(b"\n", 1)[-1].decode("utf-8")
+        )
 
 
 def save_csv(filename, data):
