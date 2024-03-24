@@ -177,7 +177,7 @@ def magick_identify_check(filename):
     out, err = proc.communicate()
     exitcode = proc.returncode
     if exitcode != 0:
-        raise Exception('Identify error:' + str(exitcode))
+        raise Exception(f'Identify error: {exitcode}: {err.decode("utf8").strip()}')
     return out
 
 
