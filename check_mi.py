@@ -161,7 +161,7 @@ def pil_check(filename):
 
 
 def magick_check(filename, flip=True):
-    # very useful for xcf, psd and aslo supports pdf
+    # very useful for xcf, psd and also supports pdf
     img = ImageW(filename=filename)
     if flip:
         temp = img.flip
