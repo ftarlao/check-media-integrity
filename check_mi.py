@@ -104,7 +104,7 @@ def arg_parser():
                              'shortcut for +crccheck+bitstream+buffer+explode',
                         dest='error_detect', default='default')
     parser.add_argument('-l', '--strict_level', metavar='L', type=int,
-                        help='uses different apporach for checking images depending on %(metavar)s integer value. '
+                        help='uses different approach for checking images depending on %(metavar)s integer value. '
                              'Accepted values 0,1 (default),2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
                              '2 applies both 0+1 checks',
                         dest='strict_level', default=1)
@@ -161,7 +161,7 @@ def pil_check(filename):
 
 
 def magick_check(filename, flip=True):
-    # very useful for xcf, psd and aslo supports pdf
+    # very useful for xcf, psd and also supports pdf
     img = ImageW(filename=filename)
     if flip:
         temp = img.flip
