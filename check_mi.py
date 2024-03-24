@@ -370,7 +370,7 @@ def main():
 
     if os.path.isfile(check_path):
         # manage single file check
-        is_success = check_file(check_path, CONFIG.error_detect)
+        is_success = check_file(check_path, CONFIG.error_detect, strict_level=CONFIG.strict_level)
         if not is_success[0]:
             check_outcome_detail = is_success[1]
             log_check_outcome(check_outcome_detail)
