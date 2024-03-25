@@ -1,5 +1,4 @@
-ffmpeg-python==0.1.17
-future==0.17.1
-Pillow-SIMD==5.3.0.post0
-PyPDF2==1.26.0
-Wand==0.4.5
+ffmpeg-python==0.2.0
+Pillow-SIMD==9.0.0.post1
+PyPDF2==3.0.1
+Wand==0.6.13
