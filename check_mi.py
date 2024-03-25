@@ -382,7 +382,6 @@ def main():
     # manage folder (searches media files into)
 
     # initializations
-    count = 0
     count_bad = 0
     total_file_size = 0
     bad_files_info = [("file_name", "error_message", "file_size[bytes]")]
@@ -408,10 +407,7 @@ def main():
 
     # consume the outcome
     try:
-        for j in range(pre_count):
-
-            count += 1
-
+        for count in range(1, pre_count + 1):
             is_success = out_queue.get(block=True, timeout=CONFIG.timeout)
             file_size = is_success[1][2]
             if file_size != 'NA':
