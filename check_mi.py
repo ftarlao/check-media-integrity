@@ -393,17 +393,11 @@ def main():
     pre_count = 0
 
     for root, sub_dirs, files in os.walk(check_path):
-        
-        media_files = []
         for filename in files:
             if is_target_file(filename):
-                media_files.append(filename)
-
-        pre_count += len(media_files)
-
-        for filename in media_files:
-            full_filename = os.path.join(root, filename)
-            task_queue.put(full_filename)
+                pre_count += 1
+                full_filename = os.path.join(root, filename)
+                task_queue.put(full_filename)
 
         if not CONFIG.is_recurse:
             break  # we only check the root folder
