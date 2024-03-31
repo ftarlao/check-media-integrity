@@ -68,6 +68,7 @@ def arg_parser():
     and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives|n 
     - with \'err_detect\' option you can provide the 'strict' shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
+    Also options \'xerror\' and \'stderr\' are allowed to error on any frame corruption and to error on any error output on stderr.
     - supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
     - supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
     - supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS) + """|n
@@ -233,16 +234,25 @@ def is_target_file(filename):
 
 
 def ffmpeg_check(filename, error_detect='default', threads=0):
-    ffargs = {'threads': threads}
+    ffargs = {'loglevel': 'error', 'threads': threads}
+    check_stderr = False
     if error_detect != 'default':
         if error_detect == 'strict':
             error_detect = '+crccheck+bitstream+buffer+explode'
+        if 'xerror' in error_detect:
+            ffargs['xerror'] = None
+            error_detect = error_detect.replace('xerror', '')
+        if 'stderr' in error_detect:
+            check_stderr = True
+            error_detect = error_detect.replace('stderr', '')
         if error_detect:
             ffargs.update({'err_detect': error_detect})
 
     stream = ffmpeg.input(filename, **ffargs).output('pipe:', format="null")
     try:
-        stream.run(capture_stdout=True, capture_stderr=True, input='')
+        stdout, stderr = stream.run(capture_stdout=True, capture_stderr=True, input='')
+        if check_stderr and stderr:
+            raise ffmpeg.Error(stream, stdout, stderr)
     except ffmpeg.Error as e:
         raise Exception(
             'ffmpeg error: ' +
