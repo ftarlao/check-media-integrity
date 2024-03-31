@@ -233,16 +233,14 @@ def is_target_file(filename):
 
 
 def ffmpeg_check(filename, error_detect='default', threads=0):
-    if error_detect == 'default':
-        stream = ffmpeg.input(filename)
-    else:
+    ffargs = {'threads': threads}
+    if error_detect != 'default':
         if error_detect == 'strict':
-            custom = '+crccheck+bitstream+buffer+explode'
-        else:
-            custom = error_detect
-        stream = ffmpeg.input(filename, **{'err_detect': custom, 'threads': threads})
+            error_detect = '+crccheck+bitstream+buffer+explode'
+        if error_detect:
+            ffargs.update({'err_detect': error_detect})
 
-    stream = stream.output('pipe:', format="null")
+    stream = ffmpeg.input(filename, **ffargs).output('pipe:', format="null")
     try:
         stream.run(capture_stdout=True, capture_stderr=True, input='')
     except ffmpeg.Error as e:
