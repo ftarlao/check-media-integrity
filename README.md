@@ -47,9 +47,9 @@ optional arguments:
                         flag E, 'strict' is shortcut for
                         +crccheck+bitstream+buffer+explode
   -l L, --strict_level L
-                        Uses different apporach for checking images depending
+                        Uses different approach for checking images depending
                         on L integer value. Accepted values 0,1 (default),2: 0
-                        ImageMagick idenitfy, 1 Pillow library+ImageMagick, 2
+                        ImageMagick identify, 1 Pillow library+ImageMagick, 2
                         applies both 0+1 checks
   -t T, --threads T     number of parallel threads used for speedup, default
                         is one. Single file execution does not take advantage
@@ -91,19 +91,19 @@ Check a folder (folder ```files```, contains the media files):
 
 ```check_mi.py ./test_folder/files```
 
-Check a folder, and subfolder recursiverly:
+Check a folder, and subfolder recursively:
 
 ```check_mi.py -r ./test_folder/files```
 
-Check a folder, and subfolder recursiverly and also check media (audio and video):
+Check a folder, and subfolder recursively and also check media (audio and video):
 
 ```check_mi.py -m -r ./test_folder/files```
 
-Check a folder, and subfolder recursiverly and save bad files details to out.csv file:
+Check a folder, and subfolder recursively and save bad files details to out.csv file:
 
 ```check_mi.py -r ./test_folder/files -c ./test_folder/output/out.csv```
 
-Check a folder, and subfolder recursiverly using 4 processes/threads, and save bad files details to out.csv file:
+Check a folder, and subfolder recursively using 4 processes/threads, and save bad files details to out.csv file:
 
 ```check_mi.py -r -t 4 ./test_folder/files -c ./test_folder/output/out.csv```
 ## Required Modules
