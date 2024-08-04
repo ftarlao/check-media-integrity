@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import warnings
 from queue import Empty
-from multiprocessing import Pool, Queue, Process
+from multiprocessing import Queue, Process
 
 __author__ = "Fabiano Tarlao"
 __copyright__ = "Copyright 2018, Fabiano Tarlao"
@@ -15,6 +14,7 @@ __status__ = "Beta"
 import sys
 import os
 import time
+import textwrap
 import PIL
 from PIL import Image as ImageP
 from wand.image import Image as ImageW
@@ -49,8 +49,6 @@ MEDIA_EXTENSIONS = []
 
 CONFIG = None
 
-import textwrap as _textwrap
-
 
 class MultilineFormatter(argparse.HelpFormatter):
     def _fill_text(self, text, width, indent):
@@ -58,7 +56,7 @@ class MultilineFormatter(argparse.HelpFormatter):
         paragraphs = text.split('|n ')
         multiline_text = ''
         for paragraph in paragraphs:
-            formatted_paragraph = _textwrap.fill(paragraph, width, initial_indent=indent,
+            formatted_paragraph = textwrap.fill(paragraph, width, initial_indent=indent,
                                                  subsequent_indent=indent) + '\n\n'
             multiline_text = multiline_text + formatted_paragraph
         return multiline_text
@@ -70,6 +68,7 @@ def arg_parser():
     and high precision, 1 has higher recall, 2 has the highest recall but could have more false positives|n 
     - with \'err_detect\' option you can provide the 'strict' shortcut or the flags supported by ffmpeg, e.g.:
     crccheck, bitstream, buffer, explode, or their combination, e.g., +buffer+bitstream|n
+    Also options \'xerror\' and \'stderr\' are allowed to error on any frame corruption and to error on any error output on stderr.
     - supported image formats/extensions: """ + str(PIL_EXTENSIONS) + """|n
     - supported image EXTRA formats/extensions:""" + str(PIL_EXTRA_EXTENSIONS + MAGICK_EXTENSIONS) + """|n
     - supported audio/video extensions: """ + str(VIDEO_EXTENSIONS + AUDIO_EXTENSIONS) + """|n
@@ -104,7 +103,7 @@ def arg_parser():
                              'shortcut for +crccheck+bitstream+buffer+explode',
                         dest='error_detect', default='default')
     parser.add_argument('-l', '--strict_level', metavar='L', type=int,
-                        help='uses different apporach for checking images depending on %(metavar)s integer value. '
+                        help='uses different approach for checking images depending on %(metavar)s integer value. '
                              'Accepted values 0,1 (default),2: 0 ImageMagick idenitfy, 1 Pillow library+ImageMagick, '
                              '2 applies both 0+1 checks',
                         dest='strict_level', default=1)
@@ -161,7 +160,7 @@ def pil_check(filename):
 
 
 def magick_check(filename, flip=True):
-    # very useful for xcf, psd and aslo supports pdf
+    # very useful for xcf, psd and also supports pdf
     img = ImageW(filename=filename)
     if flip:
         temp = img.flip
@@ -177,7 +176,7 @@ def magick_identify_check(filename):
     out, err = proc.communicate()
     exitcode = proc.returncode
     if exitcode != 0:
-        raise Exception('Identify error:' + str(exitcode))
+        raise Exception(f'Identify error: {exitcode}: {err.decode("utf8").strip()}')
     return out
 
 
@@ -235,17 +234,30 @@ def is_target_file(filename):
 
 
 def ffmpeg_check(filename, error_detect='default', threads=0):
-    if error_detect == 'default':
-        stream = ffmpeg.input(filename)
-    else:
+    ffargs = {'loglevel': 'error', 'threads': threads}
+    check_stderr = False
+    if error_detect != 'default':
         if error_detect == 'strict':
-            custom = '+crccheck+bitstream+buffer+explode'
-        else:
-            custom = error_detect
-        stream = ffmpeg.input(filename, **{'err_detect': custom, 'threads': threads})
+            error_detect = '+crccheck+bitstream+buffer+explode'
+        if 'xerror' in error_detect:
+            ffargs['xerror'] = None
+            error_detect = error_detect.replace('xerror', '')
+        if 'stderr' in error_detect:
+            check_stderr = True
+            error_detect = error_detect.replace('stderr', '')
+        if error_detect:
+            ffargs.update({'err_detect': error_detect})
 
-    stream = stream.output('pipe:', format="null")
-    stream.run(capture_stdout=True, capture_stderr=True)
+    stream = ffmpeg.input(filename, **ffargs).output('pipe:', format="null")
+    try:
+        stdout, stderr = stream.run(capture_stdout=True, capture_stderr=True, input='')
+        if check_stderr and stderr:
+            raise ffmpeg.Error(stream, stdout, stderr)
+    except ffmpeg.Error as e:
+        raise Exception(
+            'ffmpeg error: ' +
+            e.stderr.rstrip().rsplit(b"\n", 1)[-1].decode("utf-8")
+        )
 
 
 def save_csv(filename, data):
@@ -370,7 +382,7 @@ def main():
 
     if os.path.isfile(check_path):
         # manage single file check
-        is_success = check_file(check_path, CONFIG.error_detect)
+        is_success = check_file(check_path, CONFIG.error_detect, strict_level=CONFIG.strict_level)
         if not is_success[0]:
             check_outcome_detail = is_success[1]
             log_check_outcome(check_outcome_detail)
@@ -382,7 +394,6 @@ def main():
     # manage folder (searches media files into)
 
     # initializations
-    count = 0
     count_bad = 0
     total_file_size = 0
     bad_files_info = [("file_name", "error_message", "file_size[bytes]")]
@@ -393,17 +404,11 @@ def main():
     pre_count = 0
 
     for root, sub_dirs, files in os.walk(check_path):
-        
-        media_files = []
         for filename in files:
             if is_target_file(filename):
-                media_files.append(filename)
-
-        pre_count += len(media_files)
-
-        for filename in media_files:
-            full_filename = os.path.join(root, filename)
-            task_queue.put(full_filename)
+                pre_count += 1
+                full_filename = os.path.join(root, filename)
+                task_queue.put(full_filename)
 
         if not CONFIG.is_recurse:
             break  # we only check the root folder
@@ -414,10 +419,7 @@ def main():
 
     # consume the outcome
     try:
-        for j in range(pre_count):
-
-            count += 1
-
+        for count in range(1, pre_count + 1):
             is_success = out_queue.get(block=True, timeout=CONFIG.timeout)
             file_size = is_success[1][2]
             if file_size != 'NA':
@@ -433,7 +435,7 @@ def main():
             # visualization logs and stats
             timed_logger.print_log(count, count_bad, total_file_size)
     except Empty as e:
-        print("Waiting other results for too much time, perhaps you have to raise the timeout", e.message)
+        print("Waiting other results for too much time, perhaps you have to raise the timeout", str(e))
     print("\n**Task completed**\n")
     timed_logger.print_log(count, count_bad, total_file_size, force=True)
 

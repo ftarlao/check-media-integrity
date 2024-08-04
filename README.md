@@ -6,7 +6,7 @@
 *check-mi* is a Python 3 script (tested with Python 3.8) that automatically checks the integrity of media files (pictures, video, audio).
 You can check the integrity of a single file, or set of files in a folder and subfolders recursively, finally you can optionally output the list of bad files with their path and details in CSV format. 
 
-The tool tests file integrity using common libraries (Pillow, ImageMagik, FFmpeg) and checking when they are effectively able to decode the media files.
+The tool tests file integrity using common libraries (Pillow, ImageMagick, FFmpeg) and checking when they are effectively able to decode the media files.
 Warning, **image, audio and video formats are very resilient to defects and damages** for this reason the tool cannot detect all the damaged files.
 
 *check-mi* is able, with 100% confidence, to spot files that have broken header/metadata, truncated image files (with *strict_level* >0), and device i/o errors.
@@ -117,7 +117,7 @@ PyPDF2==1.26.0
 Wand==0.4.5
 ```
 You can also use the standard Pillow-PIL module, but it is far slower than Pillow-SIMD.
-Now the implementation wotks with PIL-SIMD all versions ( > < = to 6.2.2 )
+Now the implementation works with PIL-SIMD all versions ( > < = to 6.2.2 )
 
 In case you have only *libav* and not *ffmpeg* library/binaries in your Linux OS, you can fix this by creating a symbolic link *ffmpeg -> full/path/to/avconv* somewhere in your system search path.
 
